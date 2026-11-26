@@ -1,0 +1,6 @@
+{% load ui %}{% if items.paginator.num_pages > 1 %}
+<div class="pager">
+  {% if items.has_previous %}<a href="?{% qs_replace page=items.previous_page_number %}">← Prev</a>{% endif %}
+  {% for n in items.paginator.page_range %}{% if n == items.number %}<span class="on">{{ n }}</span>{% elif n|add:"-2" <= items.number and n|add:"2" >= items.number %}<a href="?{% qs_replace page=n %}">{{ n }}</a>{% endif %}{% endfor %}
+  {% if items.has_next %}<a href="?{% qs_replace page=items.next_page_number %}">Next →</a>{% endif %}
+</div>{% endif %}

@@ -1,0 +1,94 @@
+{% load static ui %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pay {{ order.amount|inr }} · {{ m.business_name }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/checkout.css' %}">
+  <style>:root { --mc: {{ m.brand_color }}; }</style>
+</head>
+<body class="co-body">
+{% csrf_token %}
+<div class="co" id="co" data-submit="{% url 'checkout_submit' order.public_id %}" data-otp="{% url 'checkout_otp' order.public_id %}" data-amount="{{ order.amount|inr }}">
+
+  <!-- LEFT: order summary -->
+  <aside class="co-left">
+    <div class="co-merchant"><div class="co-logo">{{ m.business_name|initials }}</div><div><div class="co-mname">{{ m.business_name }}</div><div class="co-sub">Secure checkout</div></div></div>
+    <div class="co-amount-block">
+      <div class="co-sub">Amount payable</div>
+      <div class="co-amount">{{ order.amount|inr }}</div>
+      {% if order.description %}<div class="co-desc">{{ order.description }}</div>{% endif %}
+      <div class="co-meta">
+        <span>Order <b class="mono">{{ order.public_id }}</b></span>
+        {% if order.receipt %}<span>Ref <b>{{ order.receipt }}</b></span>{% endif %}
+      </div>
+    </div>
+    <details class="co-test" {% if state == 'pay' %}open{% endif %}>
+      <summary>🧪 Sandbox test credentials <small>(click to autofill)</small></summary>
+      <div class="co-test-list" id="testCards">
+        {% for num, brand, outcome, tone in test_cards %}<button type="button" class="tc" data-card="{{ num }}"><span class="mono">{{ num }}</span><em class="t-{{ tone }}">{{ outcome }}</em></button>{% endfor %}
+        {% for vpa, outcome, tone in test_upi %}<button type="button" class="tc" data-upi="{{ vpa }}"><span class="mono">{{ vpa }}</span><em class="t-{{ tone }}">{{ outcome }}</em></button>{% endfor %}
+        <div class="co-hint">Any future expiry · any 3-digit CVV</div>
+      </div>
+    </details>
+    <div class="co-foot">🔒 Powered by <b>NovaPay</b> · sandbox, no real money moves</div>
+  </aside>
+
+  <!-- RIGHT: payment panel -->
+  <main class="co-right">
+    {% if state == 'paid' %}
+      <div class="res ok show"><div class="res-ic"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l8 8 16-17"/></svg></div>
+        <h2>Already paid</h2><p class="muted">This order was paid successfully{% if paid_payment %} (<span class="mono">{{ paid_payment.public_id }}</span>){% endif %}.</p>
+        {% if return_url %}<a class="btn" href="{{ return_url }}">Return to {{ m.business_name }}</a>{% endif %}</div>
+    {% elif state == 'expired' %}
+      <div class="res bad show"><div class="res-ic"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M26 14v14M26 36v2"/></svg></div>
+        <h2>This link has expired</h2><p class="muted">Please ask {{ m.business_name }} for a new payment link.</p></div>
+    {% else %}
+    <section id="step-pay">
+      <div class="seg" role="tablist"><button type="button" class="on" data-tab="card">💳 Card</button><button type="button" data-tab="upi">📲 UPI</button></div>
+
+      <form id="form-card" autocomplete="off" novalidate>
+        <div class="cc" id="cc">
+          <div class="cc-top"><div class="cc-chip"></div><div class="cc-net" id="ccNet">CARD</div></div>
+          <div class="cc-num mono" id="ccNum">•••• •••• •••• ••••</div>
+          <div class="cc-bot"><div><small>CARDHOLDER</small><div id="ccName">YOUR NAME</div></div><div><small>EXPIRES</small><div id="ccExp">MM/YY</div></div></div>
+        </div>
+        <div class="field"><label>Card number</label><input type="text" id="card_number" inputmode="numeric" placeholder="1234 5678 9012 3456" maxlength="23"><div class="err" data-err="card_number"></div></div>
+        <div class="field"><label>Name on card</label><input type="text" id="card_name" placeholder="As printed on card"></div>
+        <div class="two"><div class="field"><label>Expiry</label><input type="text" id="expiry" inputmode="numeric" placeholder="MM/YY" maxlength="5"><div class="err" data-err="expiry"></div></div>
+          <div class="field"><label>CVV</label><input type="password" id="cvv" inputmode="numeric" placeholder="•••" maxlength="4"><div class="err" data-err="cvv"></div></div></div>
+        <div class="field"><label>Email for receipt <span class="muted">(optional)</span></label><input type="email" id="email_card" value="{{ order.customer_email }}" placeholder="you@example.com"></div>
+        <button class="pay" id="payCard" type="submit"><span>Pay {{ order.amount|inr }}</span></button>
+      </form>
+
+      <form id="form-upi" class="hidden" autocomplete="off" novalidate>
+        <div class="upi-banner">Enter your UPI ID and approve the request in your UPI app.</div>
+        <div class="field"><label>UPI ID</label><input type="text" id="vpa" placeholder="yourname@bank"><div class="err" data-err="vpa"></div></div>
+        <div class="field"><label>Email for receipt <span class="muted">(optional)</span></label><input type="email" id="email_upi" value="{{ order.customer_email }}"></div>
+        <button class="pay" id="payUpi" type="submit"><span>Pay {{ order.amount|inr }}</span></button>
+      </form>
+      <div class="err global" id="globalErr"></div>
+    </section>
+
+    <section id="step-otp" class="hidden">
+      <div class="otp-ic">🔐</div>
+      <h2>Verify with your bank</h2>
+      <p class="muted">A 6-digit one-time password was sent to your registered mobile number. <br><span class="small">Sandbox OTP: <b class="mono">123456</b></span></p>
+      <div class="otp-row" id="otpRow">{% for i in "012345" %}<input class="otp" maxlength="1" inputmode="numeric">{% endfor %}</div>
+      <div class="err global" id="otpErr"></div>
+      <button class="pay" id="otpBtn" type="button"><span>Verify &amp; pay {{ order.amount|inr }}</span></button>
+    </section>
+
+    <section id="step-result" class="hidden">
+      <div class="res" id="resBox"><div class="res-ic" id="resIc"></div><h2 id="resTitle"></h2><p class="muted" id="resMsg"></p>
+        <div class="res-card" id="resCard"></div>
+        <div class="row" style="justify-content:center;margin-top:18px"><a class="btn hidden" id="resReturn" href="#">Return to {{ m.business_name }}</a><button type="button" class="btn ghost hidden" id="resRetry">Try again</button></div></div>
+    </section>
+    {% endif %}
+  </main>
+</div>
+<script src="{% static 'js/checkout.js' %}"></script>
+</body>
+</html>

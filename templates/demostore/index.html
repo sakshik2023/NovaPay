@@ -1,0 +1,7 @@
+{% extends "demostore/base.html" %}{% load ui %}
+{% block content %}
+<div class="st-hero"><h1 style="font-size:2.2rem">Learn. Build. Get certified.</h1><p style="max-width:560px">This is a <b>demo merchant website</b> that accepts payments through NovaPay exactly like a real shop would: it creates an order via the REST API, sends the customer to the hosted checkout, then verifies the signed redirect and webhook.</p></div>
+{% if not creds %}<div class="banner" style="border-color:var(--bad)">⚠ Demo credentials not found. Run <code>python manage.py seed_demo</code> first.</div>{% endif %}
+<div class="grid g3">{% for p in products %}<div class="prod"><div class="em">{{ p.emoji }}</div><h3>{{ p.name }}</h3><p class="muted small" style="flex:1">{{ p.desc }}</p><div class="price">{{ p.price|inr }}</div>
+<form method="post" action="{% url 'store_add' p.id %}">{% csrf_token %}<button class="btn or sm">Add to cart</button></form></div>{% endfor %}</div>
+{% endblock %}

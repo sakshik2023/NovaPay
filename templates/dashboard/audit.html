@@ -1,0 +1,8 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Audit log</h1><p>Who did what, when, and from where.</p></div></div>
+<div class="card flush">{% if logs %}<div class="table-wrap"><table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Entity</th><th>Detail</th><th>IP</th></tr></thead><tbody>
+{% for l in logs %}<tr><td class="muted nowrap">{{ l.created_at|date:"d M, H:i:s" }}</td><td>{{ l.actor }}</td><td><span class="chip">{{ l.action }}</span></td><td class="mono small">{{ l.entity_id }}</td><td class="small muted">{{ l.detail }}</td><td class="mono small">{{ l.ip|default:"—" }}</td></tr>{% endfor %}
+</tbody></table></div>{% include "dashboard/_pager.html" with items=logs %}{% else %}<div class="empty"><div class="big">☰</div>No activity yet.</div>{% endif %}</div>
+{% endblock %}

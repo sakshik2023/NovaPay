@@ -1,0 +1,52 @@
+{% load static ui %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dashboard{% endblock %} · NovaPay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <a class="brand" href="/dashboard/"><span class="logo"></span> NovaPay</a>
+    <div class="nav-title">Overview</div>
+    <a class="nav {% if nav == 'overview' %}on{% endif %}" href="{% url 'overview' %}"><span class="ic">◐</span> Home</a>
+    <div class="nav-title">Money</div>
+    <a class="nav {% if nav == 'payments' %}on{% endif %}" href="{% url 'payments' %}"><span class="ic">₹</span> Payments</a>
+    <a class="nav {% if nav == 'orders' %}on{% endif %}" href="{% url 'orders' %}"><span class="ic">▤</span> Orders</a>
+    <a class="nav {% if nav == 'links' %}on{% endif %}" href="{% url 'links' %}"><span class="ic">🔗</span> Payment links</a>
+    <a class="nav {% if nav == 'refunds' %}on{% endif %}" href="{% url 'refunds' %}"><span class="ic">↺</span> Refunds</a>
+    <a class="nav {% if nav == 'settlements' %}on{% endif %}" href="{% url 'settlements' %}"><span class="ic">🏦</span> Settlements</a>
+    <a class="nav {% if nav == 'ledger' %}on{% endif %}" href="{% url 'ledger' %}"><span class="ic">⚖</span> Ledger</a>
+    <div class="nav-title">Developers</div>
+    <a class="nav {% if nav == 'keys' %}on{% endif %}" href="{% url 'keys' %}"><span class="ic">🔑</span> API keys</a>
+    <a class="nav {% if nav == 'webhooks' %}on{% endif %}" href="{% url 'webhooks' %}"><span class="ic">📡</span> Webhooks</a>
+    <a class="nav" href="{% url 'docs' %}" target="_blank"><span class="ic">📘</span> API docs</a>
+    <div class="nav-title">Protect</div>
+    <a class="nav {% if nav == 'risk' %}on{% endif %}" href="{% url 'risk' %}"><span class="ic">🛡</span> Risk {% if flagged_count %}<span class="count">{{ flagged_count }}</span>{% endif %}</a>
+    <a class="nav {% if nav == 'audit' %}on{% endif %}" href="{% url 'audit' %}"><span class="ic">☰</span> Audit log</a>
+    <a class="nav {% if nav == 'settings' %}on{% endif %}" href="{% url 'settings' %}"><span class="ic">⚙</span> Settings</a>
+    <a class="nav" href="/demo-store/" target="_blank"><span class="ic">🛍</span> Demo store ↗</a>
+    <div class="side-foot">
+      <div class="user-box">
+        <div class="avatar" style="background:linear-gradient(135deg,var(--aqua),{{ merchant.brand_color }})">{{ merchant.business_name|initials }}</div>
+        <div class="grow" style="min-width:0"><div style="color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ merchant.business_name }}</div><div class="small" style="color:#8e8bc6">{{ merchant.kyc_status|label }} · sandbox</div></div>
+      </div>
+      <form method="post" action="{% url 'logout' %}" style="margin-top:10px">{% csrf_token %}<button class="btn ghost sm" style="width:100%;justify-content:center">Log out</button></form>
+    </div>
+  </aside>
+  <main class="main">
+    {% if messages %}<div class="msgs" id="msgs">{% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script>
+  setTimeout(()=>{const m=document.getElementById('msgs'); if(m) m.style.display='none'}, 6000);
+  document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>{
+    navigator.clipboard.writeText(b.dataset.copy).then(()=>{const t=b.textContent;b.textContent='Copied ✓';setTimeout(()=>b.textContent=t,1400)})}));
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

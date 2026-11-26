@@ -1,0 +1,17 @@
+{% extends "base_public.html" %}
+{% block title %}Log in — NovaPay{% endblock %}
+{% block content %}
+<div class="auth-wrap" style="min-height:calc(100vh - 90px)">
+  <div class="auth-card">
+    <h1>Welcome back</h1><p class="muted">Log in to your merchant dashboard.</p>
+    <form method="post">{% csrf_token %}
+      {% if form.errors %}<div class="msg error" style="margin-bottom:16px">Incorrect email or password.</div>{% endif %}
+      <div class="field"><label>Email</label><input type="text" name="username" autofocus required placeholder="you@company.com"></div>
+      <div class="field"><label>Password</label><input type="password" name="password" required></div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn" style="width:100%;justify-content:center">Log in</button>
+    </form>
+    <p class="small center" style="margin-top:18px">New to NovaPay? <a href="/register/">Create an account</a></p>
+  </div>
+</div>
+{% endblock %}

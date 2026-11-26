@@ -1,0 +1,30 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Payments{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Payments</h1><p>{{ totals.n|default:0 }} successful · {{ totals.s|default:0|inr }} collected (current filter)</p></div>
+  <a class="btn ghost" href="?{% qs_replace export='csv' %}">⬇ Export CSV</a></div>
+<div class="card flush">
+  <form class="filters" method="get">
+    <div style="flex:2;min-width:220px"><label>Search</label><input type="text" name="q" value="{{ request.GET.q }}" placeholder="pay_… order_… email, last4, UPI id"></div>
+    <div><label>Status</label><select name="status"><option value="">All</option>{% for v,l in statuses %}<option value="{{ v }}" {% if request.GET.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label>Method</label><select name="method"><option value="">All</option><option value="card" {% if request.GET.method == 'card' %}selected{% endif %}>Card</option><option value="upi" {% if request.GET.method == 'upi' %}selected{% endif %}>UPI</option></select></div>
+    <div><label>Risk</label><select name="risk"><option value="">All</option><option value="review" {% if request.GET.risk == 'review' %}selected{% endif %}>Review</option><option value="block" {% if request.GET.risk == 'block' %}selected{% endif %}>Blocked</option></select></div>
+    <div><label>From</label><input type="date" name="from" value="{{ request.GET.from }}"></div>
+    <div><label>To</label><input type="date" name="to" value="{{ request.GET.to }}"></div>
+    <div><button class="btn sm">Filter</button> <a class="btn ghost sm" href="{% url 'payments' %}">Reset</a></div>
+  </form>
+  {% if payments %}<div class="table-wrap"><table>
+    <thead><tr><th>Payment</th><th>Order</th><th>Instrument</th><th>Amount</th><th>Fee+GST</th><th>Risk</th><th>Status</th><th>Date</th></tr></thead>
+    <tbody>{% for p in payments %}<tr>
+      <td><a class="mono" href="{% url 'payment_detail' p.public_id %}">{{ p.public_id }}</a></td>
+      <td class="mono muted">{{ p.order.public_id }}</td>
+      <td>{{ p.instrument }} <span class="chip">{{ p.method|upper }}</span></td>
+      <td><b>{{ p.amount|inr }}</b>{% if p.refunded_amount %}<div class="small muted">−{{ p.refunded_amount|inr }} refunded</div>{% endif %}</td>
+      <td class="muted">{{ p.fee|add:p.gst|inr }}</td>
+      <td><span class="badge {{ p.fraud_decision|badge }}">{{ p.fraud_score }}</span></td>
+      <td><span class="badge {{ p.status|badge }}">{{ p.status|label }}</span></td>
+      <td class="muted nowrap">{{ p.created_at|date:"d M, H:i" }}</td></tr>{% endfor %}</tbody></table></div>
+    {% include "dashboard/_pager.html" with items=payments %}
+  {% else %}<div class="empty"><div class="big">🔍</div>No payments match these filters.</div>{% endif %}
+</div>
+{% endblock %}

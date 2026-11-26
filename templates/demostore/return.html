@@ -1,0 +1,13 @@
+{% extends "demostore/base.html" %}{% load ui %}
+{% block content %}
+<div class="card" style="max-width:640px;margin:20px auto">
+{% if not sig_ok %}<h1>⚠ Could not verify this payment</h1><p>The redirect signature was missing or invalid, so LearnHub ignores the claimed status. This is how a merchant protects itself against forged return URLs.</p>
+{% elif api_status == 'captured' %}<h1>🎉 Thank you — payment received!</h1><p>Your order <b class="mono">{{ so.public_id }}</b> is confirmed.</p>
+{% elif api_status == 'failed' %}<h1>Payment failed</h1><p>Your order is still unpaid. You can <a href="/pay/{{ so.gateway_order_id }}/">try again</a>.</p>
+{% else %}<h1>Payment status: {{ claimed|label }}</h1>{% endif %}
+<dl class="kv" style="margin-top:18px"><dt>Signature</dt><dd>{% if sig_ok %}<span class="badge ok">Verified (HMAC-SHA256)</span>{% else %}<span class="badge bad">Invalid</span>{% endif %}</dd>
+<dt>Status from query string</dt><dd>{{ claimed|label }} <span class="muted small">(untrusted)</span></dd>
+<dt>Status from NovaPay API</dt><dd>{% if api_status %}<span class="badge {{ api_status|badge }}">{{ api_status|label }}</span> <span class="muted small">(server-to-server, trusted)</span>{% else %}—{% endif %}</dd>
+<dt>Payment</dt><dd class="mono">{{ payment_id }}</dd>{% if so %}<dt>Amount</dt><dd>{{ so.total_paise|inr }}</dd>{% endif %}</dl>
+<p style="margin-top:18px"><a class="btn or" href="{% url 'store_orders' %}">View my orders</a></p></div>
+{% endblock %}

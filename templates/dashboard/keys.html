@@ -1,0 +1,17 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}API keys{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>API keys</h1><p>Authenticate with HTTP Basic: username = Key ID, password = Secret.</p></div></div>
+{% if new_key %}<div class="secret-box" style="margin-bottom:16px"><b>🔐 Copy your secret now — it won't be shown again.</b>
+  <dl class="kv" style="margin-top:10px"><dt>Key ID</dt><dd class="mono">{{ new_key.key_id }}</dd><dt>Secret</dt><dd class="mono"><b>{{ new_key.secret }}</b></dd></dl>
+  <button class="btn sm" style="margin-top:10px" data-copy="{{ new_key.key_id }}:{{ new_key.secret }}">Copy key_id:secret</button></div>{% endif %}
+<div class="grid g-main">
+<div class="card flush"><div class="table-wrap"><table><thead><tr><th>Label</th><th>Key ID</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody>
+{% for k in keys %}<tr><td>{{ k.label }}</td><td class="mono">{{ k.key_id }}</td><td class="muted">{% if k.last_used_at %}{{ k.last_used_at|timesince }} ago{% else %}never{% endif %}</td>
+<td>{% if k.is_active %}<span class="badge ok">Active</span>{% else %}<span class="badge muted">Revoked</span>{% endif %}</td>
+<td class="right">{% if k.is_active %}<form method="post">{% csrf_token %}<input type="hidden" name="action" value="revoke"><input type="hidden" name="key" value="{{ k.pk }}"><button class="btn ghost sm" onclick="return confirm('Revoke this key? Requests using it will fail.')">Revoke</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div></div>
+<div class="card"><h3>New key</h3><form method="post">{% csrf_token %}<input type="hidden" name="action" value="create"><div class="field"><label>Label</label><input type="text" name="label" placeholder="Production server"></div><button class="btn">Generate</button></form>
+<p class="small muted" style="margin-top:14px">Secrets are stored as SHA-256 hashes. NovaPay cannot recover a lost secret — generate a new key instead.</p></div>
+</div>
+{% endblock %}

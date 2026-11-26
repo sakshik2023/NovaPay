@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Ledger{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Ledger</h1><p>Double-entry books: every posting has equal debits and credits.</p></div>
+  <span class="ledger-ok {% if not balanced %}ledger-bad{% endif %}">{% if balanced %}✓ Books balanced{% else %}✗ Out of balance{% endif %}</span></div>
+<div class="card flush" style="margin-bottom:16px"><div class="card-head"><h3>Trial balance</h3></div>
+<div class="table-wrap"><table><thead><tr><th>Account</th><th>Type</th><th class="right">Debit</th><th class="right">Credit</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.account.name }}</td><td><span class="chip">{{ r.account.type }}</span></td><td class="right">{{ r.debit|inr }}</td><td class="right">{{ r.credit|inr }}</td></tr>{% empty %}<tr><td colspan="4" class="muted center">No postings yet</td></tr>{% endfor %}
+<tr style="background:#fafaff"><td colspan="2"><b>Total</b></td><td class="right"><b>{{ td|inr }}</b></td><td class="right"><b>{{ tc|inr }}</b></td></tr>
+</tbody></table></div></div>
+<div class="card flush"><div class="card-head"><h3>Transactions</h3></div>
+{% for t in txns %}<div style="padding:14px 22px;border-bottom:1px solid var(--line)"><div class="row between"><b>{{ t.description }}</b><span class="row"><span class="chip">{{ t.kind }}</span><span class="small muted">{{ t.created_at|date:"d M, H:i" }}</span></span></div>
+<table style="margin-top:6px"><tbody>{% for en in t.entries.all %}<tr><td style="padding:5px 0;border:0">{{ en.account.name }}</td><td class="right" style="padding:5px 0;border:0;width:140px">{% if en.direction == 'D' %}Dr {{ en.amount|inr }}{% endif %}</td><td class="right" style="padding:5px 0;border:0;width:140px">{% if en.direction == 'C' %}Cr {{ en.amount|inr }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% empty %}<div class="empty">No transactions yet.</div>{% endfor %}
+{% include "dashboard/_pager.html" with items=txns %}</div>
+{% endblock %}

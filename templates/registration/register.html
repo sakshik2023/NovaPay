@@ -1,0 +1,18 @@
+{% extends "base_public.html" %}
+{% block title %}Create account — NovaPay{% endblock %}
+{% block content %}
+<div class="auth-wrap" style="min-height:calc(100vh - 90px)">
+  <div class="auth-card">
+    <h1>Create your merchant account</h1><p class="muted">Get a sandbox API key in under a minute.</p>
+    <form method="post">{% csrf_token %}
+      <div class="field"><label>Business name</label><input type="text" name="business_name" value="{{ form.business_name }}" required>{% if errors.business_name %}<div class="err">{{ errors.business_name }}</div>{% endif %}</div>
+      <div class="field"><label>Business type</label>
+        <select name="business_type"><option>Retail</option><option>Education</option><option>Food &amp; Beverage</option><option>SaaS</option><option>Services</option><option>Non-profit</option></select></div>
+      <div class="field"><label>Work email</label><input type="email" name="email" value="{{ form.email }}" required>{% if errors.email %}<div class="err">{{ errors.email }}</div>{% endif %}</div>
+      <div class="field"><label>Password</label><input type="password" name="password" required minlength="8">{% if errors.password %}<div class="err">{{ errors.password }}</div>{% endif %}</div>
+      <button class="btn" style="width:100%;justify-content:center">Create account</button>
+    </form>
+    <p class="small center" style="margin-top:18px">Already registered? <a href="/login/">Log in</a></p>
+  </div>
+</div>
+{% endblock %}

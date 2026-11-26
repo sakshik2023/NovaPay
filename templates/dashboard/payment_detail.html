@@ -1,0 +1,54 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}{{ p.public_id }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><a class="small" href="{% url 'payments' %}">← Payments</a><h1 class="mono" style="margin-top:6px">{{ p.public_id }}</h1>
+  <span class="badge {{ p.status|badge }}">{{ p.status|label }}</span> <span class="chip">{{ p.method|upper }}</span></div>
+  <div class="right"><div class="amount-big">{{ p.amount|inr }}</div><div class="muted small">{{ p.created_at|date:"d M Y, H:i:s" }}</div></div></div>
+
+<div class="grid g-main">
+  <div class="stack">
+    <div class="card"><h3>Details</h3><dl class="kv">
+      <dt>Order</dt><dd class="mono">{{ p.order.public_id }} {% if p.order.receipt %}<span class="chip">{{ p.order.receipt }}</span>{% endif %}</dd>
+      <dt>Instrument</dt><dd>{{ p.instrument }}</dd>
+      <dt>Customer email</dt><dd>{{ p.customer_email|default:"—" }}</dd>
+      <dt>Bank reference</dt><dd class="mono">{{ p.bank_reference|default:"—" }}</dd>
+      <dt>Gateway fee</dt><dd>{{ p.fee|inr }} + GST {{ p.gst|inr }}</dd>
+      <dt>Net to merchant</dt><dd><b>{{ p.net_amount|inr }}</b></dd>
+      <dt>Refunded</dt><dd>{{ p.refunded_amount|inr }}</dd>
+      <dt>Settlement</dt><dd>{% if p.settlement %}<a class="mono" href="{% url 'settlement_detail' p.settlement.public_id %}">{{ p.settlement.public_id }}</a>{% else %}<span class="muted">Not settled yet</span>{% endif %}</dd>
+      {% if p.failure_code %}<dt>Failure</dt><dd><span class="badge bad">{{ p.failure_code }}</span> {{ p.failure_reason }}</dd>{% endif %}
+    </dl></div>
+
+    <div class="card"><h3>Timeline</h3><div class="timeline" style="margin-top:14px">
+      {% for e in events %}<div class="tl-item {{ e.kind }}"><b>{{ e.message }}</b><div class="small muted">{{ e.created_at|date:"d M Y, H:i:s" }}</div></div>{% endfor %}
+    </div></div>
+
+    <div class="card flush"><div class="card-head"><h3>Ledger postings</h3><a href="{% url 'ledger' %}">Full ledger →</a></div>
+      {% for t in txns %}<div style="padding:14px 22px;border-bottom:1px solid var(--line)">
+        <div class="row between"><b>{{ t.description }}</b><span class="chip">{{ t.kind }}</span></div>
+        <table style="margin-top:8px"><tbody>{% for en in t.entries.all %}<tr><td style="padding:6px 0;border:0">{{ en.account.name }}</td><td class="right" style="padding:6px 0;border:0">{% if en.direction == 'D' %}Dr {{ en.amount|inr }}{% endif %}</td><td class="right" style="padding:6px 0;border:0">{% if en.direction == 'C' %}Cr {{ en.amount|inr }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+      {% empty %}<div class="empty">No ledger postings (payment was not captured).</div>{% endfor %}
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card"><h3>Risk assessment</h3>
+      <div class="row" style="margin:10px 0"><div class="risk"><span class="badge {{ p.fraud_decision|badge }}">{{ p.fraud_decision|upper }}</span> score <b>{{ p.fraud_score }}</b>/100</div></div>
+      <div class="meter"><i style="width:{{ p.fraud_score }}%;background:linear-gradient(90deg,var(--aqua),var(--amber),var(--coral))"></i></div>
+      {% for r in p.fraud_reasons %}<p class="small" style="margin:10px 0 0">⚠ {{ r }}</p>{% empty %}<p class="small muted" style="margin:10px 0 0">No risk signals triggered.</p>{% endfor %}
+    </div>
+
+    <div class="card"><h3>Refund</h3>
+      {% if p.refundable %}
+      <p class="small muted">Refundable: <b>{{ p.refundable|inr }}</b>. Leave amount empty for a full refund.</p>
+      <form method="post">{% csrf_token %}
+        <div class="field"><label>Amount (₹)</label><input type="text" name="amount" placeholder="{{ p.refundable|rupees }}"></div>
+        <div class="field"><label>Reason</label><input type="text" name="reason" placeholder="Customer request"></div>
+        <button class="btn danger" onclick="return confirm('Issue this refund?')">Issue refund</button>
+      </form>
+      {% else %}<p class="muted small">{% if p.status == 'refunded' %}Fully refunded.{% else %}Only captured payments can be refunded.{% endif %}</p>{% endif %}
+      {% for r in refunds %}<div class="row between small" style="padding-top:10px;border-top:1px solid var(--line);margin-top:10px"><span class="mono">{{ r.public_id }}</span><b>−{{ r.amount|inr }}</b></div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

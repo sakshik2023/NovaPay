@@ -1,0 +1,12 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Refunds{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Refunds</h1><p>Total refunded: <b>{{ total|inr }}</b></p></div></div>
+<div class="card flush">
+{% if refunds %}<div class="table-wrap"><table><thead><tr><th>Refund</th><th>Payment</th><th>Amount</th><th>Reason</th><th>Settled</th><th>Date</th></tr></thead><tbody>
+{% for r in refunds %}<tr><td class="mono">{{ r.public_id }}</td><td><a class="mono" href="{% url 'payment_detail' r.payment.public_id %}">{{ r.payment.public_id }}</a></td>
+<td><b>{{ r.amount|inr }}</b></td><td>{{ r.reason|default:"—" }}</td><td>{% if r.settlement %}<span class="badge ok">Yes</span>{% else %}<span class="badge warn">Pending</span>{% endif %}</td><td class="muted nowrap">{{ r.created_at|date:"d M, H:i" }}</td></tr>{% endfor %}
+</tbody></table></div>{% include "dashboard/_pager.html" with items=refunds %}
+{% else %}<div class="empty"><div class="big">↺</div>No refunds issued.</div>{% endif %}
+</div>
+{% endblock %}

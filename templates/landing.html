@@ -1,0 +1,35 @@
+{% extends "base_public.html" %}
+{% block content %}
+<section class="lp-hero">
+  <div>
+    <span class="mode-pill" style="background:rgba(0,201,167,.15);color:#6ff0d4"><span class="live-dot"></span> Sandbox is live — no real money moves</span>
+    <h1 style="margin-top:18px">Accept payments.<br><em>Without the chaos.</em></h1>
+    <p class="lead">NovaPay is a complete payment gateway: hosted checkout, REST API, double-entry ledger, signed webhooks, fraud rules and one-click settlements — built with Django.</p>
+    <div class="row" style="margin-top:26px">
+      <a class="btn" href="/register/">Create merchant account</a>
+      <a class="btn ghost" href="/demo-store/">Try the demo store</a>
+    </div>
+    <p class="small" style="margin-top:26px;color:#8e8bc6">Demo login: <code>demo@novapay.test</code> / <code>demo1234</code> (after <code>python manage.py seed_demo</code>)</p>
+  </div>
+  <div style="position:relative">
+    <div class="mini-card">
+      <div class="chipic"></div>
+      <div class="mono" style="font-size:1.25rem;letter-spacing:.14em">4111 1111 1111 1111</div>
+      <div class="row between" style="margin-top:18px"><span class="small">NOVA CUSTOMER</span><span class="small">12/29</span></div>
+    </div>
+    <div class="glass" style="margin:-26px 0 0 60px;position:relative;max-width:330px">
+      <div class="row between"><b>Payment captured</b><span class="badge ok" style="background:rgba(15,169,104,.2);color:#5ef0b0">ok</span></div>
+      <div style="font-size:1.7rem;font-weight:800;margin:6px 0">₹2,499.00</div>
+      <div class="small" style="color:#b6b3e8">pay_8f3k2m… · fee ₹49.98 + GST ₹9.00</div>
+    </div>
+  </div>
+</section>
+<section class="feature-grid">
+  <div class="glass"><div class="feat-ic">⚡</div><h3>Hosted checkout</h3><p>Card &amp; UPI with live validation, a live card preview, 3-D Secure OTP and instant success/failure screens in your brand colour.</p></div>
+  <div class="glass"><div class="feat-ic">📒</div><h3>Double-entry ledger</h3><p>Every capture, refund and payout is balanced debit = credit, so the books always reconcile to the paisa.</p></div>
+  <div class="glass"><div class="feat-ic">🛡️</div><h3>Risk engine</h3><p>Velocity, blocklist, limit and repeat-failure rules score each attempt and allow, flag or block it.</p></div>
+  <div class="glass"><div class="feat-ic">🔁</div><h3>Idempotent API</h3><p>Send an Idempotency-Key and retries never double-charge. Over-refunds are impossible, even in parallel.</p></div>
+  <div class="glass"><div class="feat-ic">📡</div><h3>Signed webhooks</h3><p>HMAC-signed, replay-protected events with exponential-backoff retries and a delivery log.</p></div>
+  <div class="glass"><div class="feat-ic">🏦</div><h3>Settlements</h3><p>Fees + GST computed per payment, refunds netted, payouts issued with a UTR reference.</p></div>
+</section>
+{% endblock %}

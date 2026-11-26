@@ -1,0 +1,16 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Orders</h1><p>An order is created before payment. One order can have several attempts but is paid only once.</p></div></div>
+<div class="card flush">
+  <form class="filters" method="get"><div><label>Status</label><select name="status" onchange="this.form.submit()"><option value="">All</option>{% for v,l in statuses %}<option value="{{ v }}" {% if request.GET.status == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div></form>
+  {% if orders %}<div class="table-wrap"><table>
+    <thead><tr><th>Order</th><th>Receipt</th><th>Amount</th><th>Attempts</th><th>Source</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>{% for o in orders %}<tr>
+      <td class="mono">{{ o.public_id }}</td><td>{{ o.receipt|default:"—" }}</td><td><b>{{ o.amount|inr }}</b></td>
+      <td>{{ o.payments.all|length }}</td><td><span class="chip">{{ o.source }}</span></td>
+      <td><span class="badge {{ o.status|badge }}">{{ o.status|label }}</span></td><td class="muted nowrap">{{ o.created_at|date:"d M, H:i" }}</td></tr>{% endfor %}</tbody></table></div>
+    {% include "dashboard/_pager.html" with items=orders %}
+  {% else %}<div class="empty"><div class="big">▤</div>No orders yet.</div>{% endif %}
+</div>
+{% endblock %}

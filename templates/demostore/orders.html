@@ -1,0 +1,10 @@
+{% extends "demostore/base.html" %}{% load ui %}
+{% block content %}<h1>Orders &amp; incoming webhooks</h1><p class="muted">What the merchant's own server sees. Orders flip to <b>Paid</b> via the webhook even if the customer closes the browser.</p>
+<div class="grid g2"><div class="card flush"><div class="card-head"><h3>Store orders</h3></div>
+{% for o in orders %}<div style="padding:14px 22px;border-bottom:1px solid var(--line)"><div class="row between"><b class="mono">{{ o.public_id }}</b><span class="badge {{ o.status|badge }}">{{ o.status|label }}</span></div>
+<div class="small muted">{% for i in o.items %}{{ i.name }} ×{{ i.qty }}{% if not forloop.last %}, {% endif %}{% endfor %}</div><div class="row between small"><span>{{ o.total_paise|inr }}</span><span class="mono muted">{{ o.gateway_order_id }}</span></div></div>
+{% empty %}<div class="empty">No orders yet.</div>{% endfor %}</div>
+<div class="card flush"><div class="card-head"><h3>Webhooks received</h3></div>
+{% for h in hooks %}<div style="padding:12px 22px;border-bottom:1px solid var(--line)"><div class="row between"><span class="chip">{{ h.event_type }}</span>{% if h.signature_valid %}<span class="badge ok">signature ✓</span>{% else %}<span class="badge bad">signature ✗</span>{% endif %}</div><div class="small muted mono">{{ h.event_id }} · {{ h.received_at|date:"H:i:s" }}</div></div>
+{% empty %}<div class="empty">None yet.</div>{% endfor %}</div></div>
+{% endblock %}

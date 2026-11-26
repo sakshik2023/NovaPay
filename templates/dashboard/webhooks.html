@@ -1,0 +1,34 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Webhooks{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Webhooks</h1><p>Get notified on your server when a payment is captured, fails or is refunded.</p></div>
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="process"><button class="btn ghost">⟳ Process due deliveries</button></form></div>
+<div class="grid g2" style="margin-bottom:16px">
+  <div class="card"><h3>Endpoint</h3>
+    <form method="post">{% csrf_token %}<input type="hidden" name="action" value="save_url">
+      <div class="field"><label>Webhook URL</label><input type="url" name="webhook_url" value="{{ merchant.webhook_url }}" placeholder="https://yourshop.com/webhooks/novapay"></div>
+      <div class="row"><button class="btn">Save</button></div></form>
+    <form method="post" style="margin-top:10px">{% csrf_token %}<input type="hidden" name="action" value="test"><button class="btn ghost sm">Send test event</button></form></div>
+  <div class="card"><h3>Signing secret</h3>
+    <p class="small muted">Verify <code>X-NovaPay-Signature: t=…,v1=HMAC_SHA256(secret, "t.body")</code> and reject if t is older than 5 minutes.</p>
+    <div class="codebox" style="padding:10px 14px">{{ merchant.webhook_secret }}</div>
+    <form method="post" style="margin-top:10px">{% csrf_token %}<input type="hidden" name="action" value="rotate"><button class="btn ghost sm" onclick="return confirm('Rotate secret? Your server must be updated.')">Rotate secret</button></form></div>
+</div>
+<div class="grid g4" style="margin-bottom:16px">
+  <div class="card kpi"><div class="k-label">Delivered</div><div class="k-val" style="color:var(--ok)">{{ stats.delivered|default:0 }}</div></div>
+  <div class="card kpi"><div class="k-label">Pending</div><div class="k-val">{{ stats.pending|default:0 }}</div></div>
+  <div class="card kpi"><div class="k-label">Retrying</div><div class="k-val" style="color:var(--warn)">{{ stats.retrying|default:0 }}</div></div>
+  <div class="card kpi"><div class="k-label">Failed</div><div class="k-val" style="color:var(--bad)">{{ stats.failed|default:0 }}</div></div>
+</div>
+<div class="card flush"><div class="card-head"><h3>Delivery log</h3></div>
+{% if deliveries %}<div class="table-wrap"><table><thead><tr><th>Event</th><th>Type</th><th>Status</th><th>Attempts</th><th>Last response</th><th>Next attempt</th><th></th></tr></thead><tbody>
+{% for d in deliveries %}<tr><td class="mono">{{ d.event.public_id }}</td><td><span class="chip">{{ d.event.event_type }}</span></td>
+<td><span class="badge {{ d.status|badge }}">{{ d.status|label }}</span></td><td>{{ d.attempts }}</td>
+<td>{% if d.last_response_code %}<b>{{ d.last_response_code }}</b>{% endif %} <span class="small muted">{{ d.last_error }}</span></td>
+<td class="small muted nowrap">{% if d.status == 'retrying' or d.status == 'pending' %}{{ d.next_attempt_at|date:"H:i:s" }}{% else %}—{% endif %}</td>
+<td class="right"><form method="post">{% csrf_token %}<input type="hidden" name="action" value="retry"><input type="hidden" name="delivery" value="{{ d.pk }}"><button class="btn ghost sm">Resend</button></form></td></tr>
+<tr><td colspan="7" style="padding:0 22px 12px;border:0"><details><summary class="small muted" style="cursor:pointer">payload &amp; attempts</summary><pre class="codebox" style="margin-top:8px">{{ d.event.payload|pretty }}</pre>
+{% for a in d.attempt_log.all %}<div class="small muted">#{{ a.attempt_no }} · {{ a.response_code|default:"no response" }} · {{ a.duration_ms }}ms {{ a.error }}</div>{% endfor %}</details></td></tr>{% endfor %}
+</tbody></table></div>{% include "dashboard/_pager.html" with items=deliveries %}
+{% else %}<div class="empty"><div class="big">📡</div>No deliveries yet. Set an endpoint and make a payment.</div>{% endif %}</div>
+{% endblock %}

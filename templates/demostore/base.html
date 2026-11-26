@@ -1,0 +1,18 @@
+{% load static ui %}<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearnHub — demo merchant store</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+<style>
+ body{background:#fffaf2} .st-nav{display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto;padding:20px 24px}
+ .st-brand{font-weight:800;font-size:1.4rem;color:#e8590c;letter-spacing:-.03em} .st-brand:hover{text-decoration:none}
+ .st-wrap{max-width:1100px;margin:0 auto;padding:0 24px 70px} .st-hero{background:linear-gradient(120deg,#ffe8cc,#ffd8a8);border-radius:24px;padding:36px;margin-bottom:26px}
+ .prod{background:#fff;border-radius:18px;padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;transition:transform .15s}.prod:hover{transform:translateY(-3px)}
+ .prod .em{font-size:2.4rem}.prod .price{font-size:1.3rem;font-weight:800}
+ .btn.or{background:linear-gradient(135deg,#f76707,#e8590c);box-shadow:0 6px 16px rgba(232,89,12,.3)}
+ .banner{background:#fff;border:1.5px dashed #e8590c;border-radius:14px;padding:12px 16px;margin-bottom:18px;font-size:.9rem}
+</style></head><body>
+<nav class="st-nav"><a class="st-brand" href="/demo-store/">🎒 LearnHub</a>
+ <div class="row"><a href="/demo-store/orders/">Orders &amp; webhooks</a><a class="btn or sm" href="/demo-store/cart/">Cart ({{ cart_count|default:0 }})</a><a href="/">NovaPay home</a></div></nav>
+{% if messages %}<div class="msgs">{% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
+<div class="st-wrap">{% block content %}{% endblock %}</div></body></html>

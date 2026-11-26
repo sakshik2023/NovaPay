@@ -1,0 +1,11 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}{{ s.public_id }}{% endblock %}
+{% block content %}
+<div class="topbar"><div><a class="small" href="{% url 'settlements' %}">← Settlements</a><h1 class="mono" style="margin-top:6px">{{ s.public_id }}</h1><span class="badge ok">{{ s.status|label }}</span> <span class="chip">UTR {{ s.utr }}</span></div>
+  <div class="right"><div class="amount-big">{{ s.net|inr }}</div><div class="muted small">{{ s.created_at|date:"d M Y, H:i" }}</div></div></div>
+<div class="card" style="margin-bottom:16px"><dl class="kv"><dt>Gross collected</dt><dd>{{ s.gross|inr }}</dd><dt>Fees + GST</dt><dd>−{{ s.fees|inr }}</dd><dt>Refunds netted</dt><dd>−{{ s.refunds_total|inr }}</dd><dt>Net payout</dt><dd><b>{{ s.net|inr }}</b></dd></dl></div>
+<div class="card flush"><div class="card-head"><h3>Payments included</h3></div><div class="table-wrap"><table><thead><tr><th>Payment</th><th>Amount</th><th>Fee+GST</th><th>Net</th></tr></thead><tbody>
+{% for p in payments %}<tr><td><a class="mono" href="{% url 'payment_detail' p.public_id %}">{{ p.public_id }}</a></td><td>{{ p.amount|inr }}</td><td class="muted">{{ p.fee|add:p.gst|inr }}</td><td><b>{{ p.net_amount|inr }}</b></td></tr>{% empty %}<tr><td colspan="4" class="muted">None (refund-only settlement)</td></tr>{% endfor %}
+</tbody></table></div></div>
+{% if refunds %}<div class="card flush" style="margin-top:16px"><div class="card-head"><h3>Refunds deducted</h3></div><table><tbody>{% for r in refunds %}<tr><td class="mono">{{ r.public_id }}</td><td class="mono">{{ r.payment.public_id }}</td><td class="right"><b>−{{ r.amount|inr }}</b></td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% endblock %}

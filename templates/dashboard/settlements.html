@@ -1,0 +1,15 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Settlements{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Settlements</h1><p>Payouts from NovaPay to your bank account.</p></div></div>
+<div class="grid g-main">
+  <div class="card flush"><div class="card-head"><h3>History</h3></div>
+  {% if settlements %}<div class="table-wrap"><table><thead><tr><th>Settlement</th><th>Payments</th><th>Gross</th><th>Fees+GST</th><th>Refunds</th><th>Net payout</th><th>UTR</th><th>Date</th></tr></thead><tbody>
+  {% for s in settlements %}<tr><td><a class="mono" href="{% url 'settlement_detail' s.public_id %}">{{ s.public_id }}</a></td><td>{{ s.payments_count }}</td><td>{{ s.gross|inr }}</td><td class="muted">−{{ s.fees|inr }}</td><td class="muted">−{{ s.refunds_total|inr }}</td><td><b>{{ s.net|inr }}</b></td><td class="mono small">{{ s.utr }}</td><td class="muted nowrap">{{ s.created_at|date:"d M, H:i" }}</td></tr>{% endfor %}
+  </tbody></table></div>{% include "dashboard/_pager.html" with items=settlements %}
+  {% else %}<div class="empty"><div class="big">🏦</div>No settlements yet.</div>{% endif %}</div>
+  <div class="card kpi hero"><div class="k-label">Ready to settle</div><div class="k-val">{{ payable|inr }}</div>
+    <div class="k-sub" style="margin-bottom:14px">{{ unsettled_count }} payment{{ unsettled_count|pluralize }} · gross {{ gross|inr }}<br>fees+GST −{{ fees|inr }} · refunds −{{ pending_refunds|inr }}</div>
+    <form method="post">{% csrf_token %}<button class="btn" style="background:#fff;color:var(--brand);box-shadow:none" {% if payable <= 0 %}disabled{% endif %}>Settle now →</button></form></div>
+</div>
+{% endblock %}

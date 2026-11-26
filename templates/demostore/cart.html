@@ -1,0 +1,8 @@
+{% extends "demostore/base.html" %}{% load ui %}
+{% block content %}<h1>Your cart</h1>
+{% if lines %}<div class="card flush"><table><thead><tr><th>Item</th><th>Qty</th><th class="right">Price</th><th></th></tr></thead><tbody>
+{% for l in lines %}<tr><td>{{ l.emoji }} {{ l.name }}</td><td>{{ l.qty }}</td><td class="right">{{ l.line|inr }}</td><td class="right"><form method="post" action="{% url 'store_remove' l.id %}">{% csrf_token %}<button class="btn ghost sm">Remove</button></form></td></tr>{% endfor %}
+<tr><td colspan="2"><b>Total</b></td><td class="right"><b style="font-size:1.2rem">{{ total|inr }}</b></td><td></td></tr></tbody></table></div>
+<form method="post" action="{% url 'store_checkout' %}" style="margin-top:18px">{% csrf_token %}<button class="btn or">Pay with NovaPay →</button></form>
+{% else %}<div class="empty"><div class="big">🛒</div>Your cart is empty. <a href="{% url 'store_index' %}">Browse courses</a></div>{% endif %}
+{% endblock %}

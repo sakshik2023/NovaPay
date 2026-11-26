@@ -1,0 +1,25 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Payment links{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Payment links</h1><p>Collect a payment without writing code — share the link on WhatsApp, email or SMS.</p></div></div>
+<div class="grid g-main">
+  <div class="card flush">
+    <div class="card-head"><h3>Your links</h3></div>
+    {% if orders %}<div class="table-wrap"><table><thead><tr><th>For</th><th>Amount</th><th>Status</th><th>Link</th></tr></thead><tbody>
+    {% for o in orders %}<tr><td>{{ o.description|default:"Payment" }}{% if o.customer_name %}<div class="small muted">{{ o.customer_name }}</div>{% endif %}</td><td><b>{{ o.amount|inr }}</b></td>
+      <td><span class="badge {{ o.status|badge }}">{{ o.status|label }}</span></td>
+      <td class="nowrap"><a class="btn ghost sm" href="/pay/{{ o.public_id }}/" target="_blank">Open</a> <button class="btn ghost sm" data-copy="{{ base }}/pay/{{ o.public_id }}/">Copy</button></td></tr>{% endfor %}
+    </tbody></table></div>{% include "dashboard/_pager.html" with items=orders %}
+    {% else %}<div class="empty"><div class="big">🔗</div>No links yet — create your first one.</div>{% endif %}
+  </div>
+  <div class="card"><h3>Create a link</h3>
+    <form method="post">{% csrf_token %}
+      <div class="field"><label>Amount (₹)</label><input type="text" name="amount" placeholder="499.00" required></div>
+      <div class="field"><label>Description</label><input type="text" name="description" placeholder="Course fee — March batch"></div>
+      <div class="field"><label>Customer name</label><input type="text" name="customer_name"></div>
+      <div class="field"><label>Customer email</label><input type="email" name="customer_email"></div>
+      <div class="field"><label>Receipt / reference</label><input type="text" name="receipt" placeholder="INV-1024"></div>
+      <button class="btn">Create link</button>
+    </form></div>
+</div>
+{% endblock %}

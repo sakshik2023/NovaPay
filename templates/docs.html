@@ -1,0 +1,62 @@
+{% extends "base_public.html" %}
+{% block title %}API reference — NovaPay{% endblock %}
+{% block content %}
+<div style="background:var(--bg);color:var(--ink);min-height:100vh;margin-top:-1px"><div class="docs">
+<h1>NovaPay API reference</h1>
+<p class="muted">REST + JSON. Amounts are integers in <b>paise</b> (₹1 = 100). Base URL: <code>{{ request.scheme }}://{{ request.get_host }}/v1</code></p>
+
+<h2>Authentication</h2>
+<p>HTTP Basic. Username = <b>Key ID</b>, password = <b>Secret</b> (create keys in the dashboard). Secrets are stored hashed.</p>
+<pre class="codebox">curl -u np_test_xxx:sk_xxx {{ request.scheme }}://{{ request.get_host }}/v1/ping</pre>
+
+<h2>Errors</h2>
+<pre class="codebox">{ "error": { "code": "BAD_REQUEST_ERROR", "field": "amount", "description": "Amount must be at least 100 paise (Rs 1)" } }</pre>
+<p class="small muted">Codes: BAD_REQUEST_ERROR 400 · AUTHENTICATION_ERROR 401 · INVALID_STATE / ORDER_ALREADY_PAID 409 · ORDER_EXPIRED 410 · IDEMPOTENCY_KEY_REUSED 422 · RATE_LIMITED 429 (120 req/min per merchant; see <code>X-RateLimit-Remaining</code>)</p>
+
+<h2>Idempotency</h2>
+<p>Send <code>Idempotency-Key: &lt;unique string&gt;</code> on any POST. A retry with the same key and body returns the original response (header <code>Idempotent-Replayed: true</code>) and never creates a second order, payment or refund. Same key + different body → 422.</p>
+
+<h2>Orders</h2>
+<div class="endpoint"><span class="method post">POST</span> /v1/orders</div>
+<pre class="codebox">curl -u KEY:SECRET -H "Idempotency-Key: inv-1001" -H "Content-Type: application/json" \
+  -d '{"amount": 149900, "currency": "INR", "receipt": "INV-1001",
+       "description": "Python course", "callback_url": "https://shop.com/return"}' \
+  {{ request.scheme }}://{{ request.get_host }}/v1/orders
+
+→ 201 { "id": "order_9f2c…", "status": "created", "amount": 149900, "checkout_url": "/pay/order_9f2c…/" }</pre>
+<div class="endpoint"><span class="method get">GET</span> /v1/orders/{id} · /v1/orders?status=paid&amp;count=25&amp;starting_after=order_…</div>
+
+<h2>Payments</h2>
+<p>Customers normally pay on the hosted checkout (<code>/pay/{order_id}/</code>) so card data never touches your server. For sandbox testing you can also create payments directly:</p>
+<div class="endpoint"><span class="method post">POST</span> /v1/payments</div>
+<pre class="codebox">{ "order_id": "order_9f2c…", "method": "card", "card_number": "4111111111111111", "expiry": "12/30", "cvv": "123" }
+{ "order_id": "order_9f2c…", "method": "upi",  "vpa": "success@upi" }</pre>
+<div class="endpoint"><span class="method post">POST</span> /v1/payments/{id}/otp &nbsp; {"otp": "123456"}</div>
+<div class="endpoint"><span class="method get">GET</span> /v1/payments/{id} · /v1/payments?status=captured&amp;method=upi</div>
+<p>Status flow: <code>pending → captured | failed</code>, then <code>captured → partially_refunded → refunded</code>.</p>
+
+<h2>Refunds</h2>
+<div class="endpoint"><span class="method post">POST</span> /v1/payments/{id}/refunds</div>
+<pre class="codebox">{ "amount": 50000, "reason": "Customer request" }     // omit amount for a full refund</pre>
+<p>Total refunds can never exceed the captured amount, even under parallel requests.</p>
+
+<h2>Settlements &amp; webhooks</h2>
+<div class="endpoint"><span class="method get">GET</span> /v1/settlements</div>
+<div class="endpoint"><span class="method post">POST</span> /v1/webhooks/test</div>
+<p>Events: <code>payment.captured</code>, <code>payment.failed</code>, <code>order.paid</code>, <code>refund.processed</code>, <code>webhook.test</code>. Return any 2xx to acknowledge; otherwise NovaPay retries after 10s, 1m, 5m, 30m, 2h.</p>
+<pre class="codebox"><span class="c"># Verify (Python)</span>
+header = request.headers["X-NovaPay-Signature"]          <span class="c"># t=1712345678,v1=ab12…</span>
+t, v1 = [p.split("=")[1] for p in header.split(",")]
+expected = hmac.new(WEBHOOK_SECRET.encode(), f"{t}.{request.body.decode()}".encode(), hashlib.sha256).hexdigest()
+ok = hmac.compare_digest(v1, expected) and abs(time.time() - int(t)) &lt; 300</pre>
+
+<h2>Redirect signature</h2>
+<p>After payment the customer returns to your <code>callback_url</code> with <code>order_id, payment_id, status, signature</code> where <code>signature = HMAC_SHA256(webhook_secret, order_id + "|" + payment_id)</code>. Always verify it, then confirm the status with <code>GET /v1/payments/{id}</code>.</p>
+
+<h2>Sandbox test data</h2>
+<pre class="codebox">4111 1111 1111 1111  success         5555 5555 5555 4444  success (Mastercard)
+4000 0000 0000 3220  OTP 123456      4000 0000 0000 9995  insufficient funds
+4000 0000 0000 0069  card expired    4000 0000 0000 0119  blocked by fraud engine
+UPI: success@upi · failure@upi · timeout@upi</pre>
+</div></div>
+{% endblock %}

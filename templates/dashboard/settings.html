@@ -1,0 +1,12 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Settings</h1><p>Business profile and checkout branding.</p></div></div>
+<div class="grid g2"><div class="card"><form method="post">{% csrf_token %}
+  <div class="field"><label>Business name</label><input type="text" name="business_name" value="{{ merchant.business_name }}"></div>
+  <div class="field"><label>Business type</label><input type="text" name="business_type" value="{{ merchant.business_type }}"></div>
+  <div class="field"><label>Website</label><input type="url" name="website" value="{{ merchant.website }}"></div>
+  <div class="field"><label>Checkout brand colour</label><input type="color" name="brand_color" value="{{ merchant.brand_color }}" style="height:46px;padding:4px"></div>
+  <button class="btn">Save</button></form></div>
+  <div class="card"><h3>Account</h3><dl class="kv"><dt>Merchant ID</dt><dd class="mono">{{ merchant.public_id }}</dd><dt>Email</dt><dd>{{ request.user.email }}</dd><dt>KYC</dt><dd><span class="badge {{ merchant.kyc_status|badge }}">{{ merchant.kyc_status|label }}</span></dd><dt>Fee plan</dt><dd>2% + 18% GST per captured payment</dd><dt>Joined</dt><dd>{{ merchant.created_at|date:"d M Y" }}</dd></dl></div></div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}{% load ui %}
+{% block title %}Risk{% endblock %}
+{% block content %}
+<div class="topbar"><div><h1>Risk &amp; fraud</h1><p>Every payment attempt is scored 0–100 before it reaches the bank.</p></div></div>
+<div class="grid g3" style="margin-bottom:16px">
+  <div class="card kpi"><div class="k-label">Allowed</div><div class="k-val" style="color:var(--ok)">{{ counts.allow|default:0 }}</div></div>
+  <div class="card kpi"><div class="k-label">Flagged for review</div><div class="k-val" style="color:var(--warn)">{{ counts.review|default:0 }}</div></div>
+  <div class="card kpi"><div class="k-label">Blocked</div><div class="k-val" style="color:var(--bad)">{{ counts.block|default:0 }}</div></div>
+</div>
+<div class="grid g-main">
+  <div class="card flush"><div class="card-head"><h3>Flagged &amp; blocked payments</h3></div>
+  {% if flagged %}<table><thead><tr><th>Payment</th><th>Amount</th><th>Score</th><th>Why</th><th>Status</th></tr></thead><tbody>
+  {% for p in flagged %}<tr><td><a class="mono" href="{% url 'payment_detail' p.public_id %}">{{ p.public_id }}</a></td><td>{{ p.amount|inr }}</td><td><span class="badge {{ p.fraud_decision|badge }}">{{ p.fraud_score }}</span></td><td class="small">{{ p.fraud_reasons|join:"; " }}</td><td><span class="badge {{ p.status|badge }}">{{ p.status|label }}</span></td></tr>{% endfor %}
+  </tbody></table>{% include "dashboard/_pager.html" with items=flagged %}
+  {% else %}<div class="empty"><div class="big">🛡️</div>Nothing flagged. Try test card <code>4000 0000 0000 0119</code> to see a block.</div>{% endif %}</div>
+  <div class="stack">
+    <div class="card"><h3>Per-payment limit</h3><form method="post">{% csrf_token %}<div class="field"><label>Maximum amount (₹)</label><input type="text" name="limit" value="{{ merchant.max_payment_paise|rupees }}"></div><button class="btn">Save limit</button></form></div>
+    <div class="card"><h3>Active rules</h3><ul class="small" style="padding-left:18px;margin:0;line-height:1.9">
+      <li>Blocklisted card → <b>block</b></li><li>Above merchant limit → <b>block</b></li><li>≥ ₹50,000 → +20</li><li>5+ attempts from one IP in 10 min → +45</li><li>3+ failures on one card in 1 h → +50</li><li>Same card at 3+ merchants in 1 h → +35</li><li>Score ≥ 80 block · 40–79 review</li></ul></div>
+  </div>
+</div>
+{% endblock %}

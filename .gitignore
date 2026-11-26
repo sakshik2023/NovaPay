@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+test_db.sqlite3
+.demo_credentials.json
